@@ -4,6 +4,8 @@ A real-time, physics-based graphics engine written in C and modern OpenGL that r
 
 <img src="https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTExL3Jhd3BpeGVsb2ZmaWNlM19odW1hbl9mYWNlX2xpbmVfaWxsdXNpb25fZWxlbWVudF9taW5pbWFsX3BzeWNoZV9mOGRlMjY0YS1kNjUzLTQwYzctOWY4Yy0yYmNkMTY5MDhhMDJfMi5wbmc.png" alt="Contour Rendered Head" width="300"/>
 *(Image represents the target visual style)*
+
+
 ## About The Project
 
 This project explores an alternative to traditional pixel-based rasterization. Instead of rendering triangles, it generates a physics-based representation of a 3D model using a Verlet integration simulation. This particle system is then rendered as a series of flowing, stylized contour lines inspired by topographic maps and engraving art.
