@@ -20,7 +20,7 @@ The rendering pipeline uses a hybrid approach:
 
 * **C**
 * **OpenGL 4.3+** (Specifically Compute Shaders & Geometry Shaders)
-* **SDL2** for windowing and input
+* **GLFW** for windowing and input
 * **GLAD** for loading OpenGL functions
 * **cglm** for 3D math
 * **CMake** for the build system
@@ -41,16 +41,16 @@ You will need a C compiler (GCC, Clang, or MSVC), CMake, and the development lib
     ```
 2.  Navigate to the project directory
     ```sh
-    cd Contour-Engine
+    cd Engine
     ```
 3.  Configure and build with CMake
     ```sh
     mkdir build
     cd build
     cmake ..
-    make
+    cmake --build .
     ```
-4.  Run the executable from the `build` directory.
+4.  Run the executable from the `build/debug` directory.
 
 ## Acknowledgements
 
