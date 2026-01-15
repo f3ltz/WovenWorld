@@ -3,9 +3,10 @@
 #include <cglm/cglm.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "model.h"
 
 // Camera state
-vec3 cameraPos   = {0.0f, 0.0f,  3.0f};
+vec3 cameraPos   = {0.291234f, 22.452366f, 24.892710f};
 vec3 cameraFront = {0.0f, 0.0f, -1.0f};
 vec3 cameraUp    = {0.0f, 1.0f,  0.0f};
 float deltaTime  = 0.0f;
@@ -165,6 +166,7 @@ int main(){
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
     glEnable(GL_DEPTH_TEST);
+
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
     GLuint shaderProgram = shader_create_program(
@@ -218,32 +220,41 @@ int main(){
      0.5f,  0.5f,  0.5f,
     -0.5f,  0.5f,  0.5f,
     -0.5f,  0.5f, -0.5f
-};
+    };
 
-    GLuint VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    Model myModel = load_model("../assets/Human.obj");  
 
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    // GLuint VBO, VAO;
+    // glGenVertexArrays(1, &VAO);
+    // glGenBuffers(1, &VBO);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    // glBindVertexArray(VAO);
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+    // glEnableVertexAttribArray(0);
+
+    // glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // glBindVertexArray(0);
 
     while(!glfwWindowShouldClose(window)){
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-
+        // printf("%f %f %f\n", cameraPos[0], cameraPos[1], cameraPos[2]);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        char title[64];
+        sprintf(title, "FPS: %.2f", 1.0/deltaTime);
+        glfwSetWindowTitle(window, title);
 
         glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
+        glBindVertexArray(myModel.VAO);
+        vec3 lightPos = {2.0f, 2.0f, 2.0f};
+
+        GLuint lightLoc = glGetUniformLocation(shaderProgram, "lightpos");
+        glUniform3fv(lightLoc, 1, (float*)lightPos);
 
         float cameraSpeed = 2.5*deltaTime;
         if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
@@ -280,7 +291,7 @@ int main(){
         glm_rotate(model, (float)glfwGetTime(), (vec3){0.5f, 1.0f, 0.0f});
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, (float*)model);
 
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDrawArrays(GL_TRIANGLES, 0, myModel.vertexCount);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

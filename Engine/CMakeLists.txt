@@ -7,7 +7,7 @@ include_directories(${CMAKE_SOURCE_DIR}/dependencies)
 
 link_directories(${CMAKE_SOURCE_DIR}/dependencies/glfw/lib-vc2022)
 
-add_executable(Engine src/main.c src/glad.c)
+add_executable(Engine src/main.c src/glad.c src/model.c)
 
 target_link_libraries(Engine
     glfw3

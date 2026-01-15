@@ -370,6 +370,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   <ItemGroup>
     <ClCompile Include="D:\WovenWorld\WovenWorld\Engine\src\main.c" />
     <ClCompile Include="D:\WovenWorld\WovenWorld\Engine\src\glad.c" />
+    <ClCompile Include="D:\WovenWorld\WovenWorld\Engine\src\model.c" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
