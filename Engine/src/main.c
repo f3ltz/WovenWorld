@@ -1,3 +1,5 @@
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
@@ -142,6 +144,35 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos){
 
 }
 
+GLuint load_texture(const char* path){
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrChannels;
+
+    stbi_set_flip_vertically_on_load(1);
+
+    unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
+    if(data){
+        GLenum format = (nrChannels==4)?GL_RGBA:GL_RGB;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    } else {
+        printf("Texture failed to load at path: %s\n", path);
+        stbi_image_free(data);
+    }
+
+    return textureID;
+}
 
 int main(){
     if(!glfwInit()){
@@ -173,56 +204,15 @@ int main(){
         "../shaders/vertex.glsl",
         "../shaders/fragment.glsl"
     );
-
+    glUseProgram(shaderProgram);
+    glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
     GLuint modelLoc = glGetUniformLocation(shaderProgram, "model");
     GLuint viewLoc  = glGetUniformLocation(shaderProgram, "view");
     GLuint projLoc  = glGetUniformLocation(shaderProgram, "projection");
+    GLuint lightLoc = glGetUniformLocation(shaderProgram, "lightPos");
 
-    float vertices[] = {
-    -0.5f, -0.5f, -0.5f, 
-     0.5f, -0.5f, -0.5f,
-     0.5f,  0.5f, -0.5f,
-     0.5f,  0.5f, -0.5f,
-    -0.5f,  0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-
-    -0.5f, -0.5f,  0.5f,
-     0.5f, -0.5f,  0.5f,
-     0.5f,  0.5f,  0.5f,
-     0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f,  0.5f,
-    -0.5f, -0.5f,  0.5f,
-
-    -0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-    -0.5f, -0.5f,  0.5f,
-    -0.5f,  0.5f,  0.5f,
-
-     0.5f,  0.5f,  0.5f,
-     0.5f,  0.5f, -0.5f,
-     0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f,  0.5f,
-     0.5f,  0.5f,  0.5f,
-
-    -0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f,  0.5f,
-     0.5f, -0.5f,  0.5f,
-    -0.5f, -0.5f,  0.5f,
-    -0.5f, -0.5f, -0.5f,
-
-    -0.5f,  0.5f, -0.5f,
-     0.5f,  0.5f, -0.5f,
-     0.5f,  0.5f,  0.5f,
-     0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f, -0.5f
-    };
-
-    Model myModel = load_model("../assets/Human.obj");  
+    Model myModel = load_model("../assets/peng.obj");  
+    GLuint diffuseMap = load_texture("../assets/peng.png");
 
     // GLuint VBO, VAO;
     // glGenVertexArrays(1, &VAO);
@@ -238,25 +228,20 @@ int main(){
     // glBindBuffer(GL_ARRAY_BUFFER, 0);
     // glBindVertexArray(0);
 
+    vec3 lightPos = {2.0f, 2.0f, 2.0f};
+
     while(!glfwWindowShouldClose(window)){
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-        // printf("%f %f %f\n", cameraPos[0], cameraPos[1], cameraPos[2]);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         char title[64];
         sprintf(title, "FPS: %.2f", 1.0/deltaTime);
         glfwSetWindowTitle(window, title);
 
-        glUseProgram(shaderProgram);
-        glBindVertexArray(myModel.VAO);
-        vec3 lightPos = {2.0f, 2.0f, 2.0f};
 
-        GLuint lightLoc = glGetUniformLocation(shaderProgram, "lightpos");
-        glUniform3fv(lightLoc, 1, (float*)lightPos);
-
-        float cameraSpeed = 2.5*deltaTime;
+        float cameraSpeed = 25*deltaTime;
         if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
             glm_vec3_muladds(cameraFront, cameraSpeed, cameraPos);
         }
@@ -275,10 +260,23 @@ int main(){
             glm_vec3_normalize(crossProduct);
             glm_vec3_muladds(crossProduct, cameraSpeed, cameraPos);
         }
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){       
+            glm_vec3_muladds(cameraUp, cameraSpeed, cameraPos);
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
+            glm_vec3_muladds(cameraUp, -cameraSpeed, cameraPos);
+        }
+
+        
 
         mat4 projection;
         glm_perspective(glm_rad(45.0f), 800.0f / 600.0f, 0.1f, 100.0f, projection);
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, (float*)projection);
+        // 1. FIX: Send the actual Light Position (not 0,0,0)
+        glUniform3fv(lightLoc, 1, (float*)lightPos); 
+
+        // 2. FIX: Send Camera Position for Specular Lighting
+        glUniform3fv(glGetUniformLocation(shaderProgram, "viewPos"), 1, (float*)cameraPos);
         
         mat4 view;
         vec3 center;
@@ -288,15 +286,19 @@ int main(){
 
         mat4 model;
         glm_mat4_identity(model);
-        glm_rotate(model, (float)glfwGetTime(), (vec3){0.5f, 1.0f, 0.0f});
+        //glm_rotate(model, (float)glfwGetTime(), (vec3){0.5f, 1.0f, 0.0f});
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, (float*)model);
 
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
+        glBindVertexArray(myModel.VAO);
         glDrawArrays(GL_TRIANGLES, 0, myModel.vertexCount);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
+    
     glfwTerminate();
     return 0;
 }

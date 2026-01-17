@@ -16,13 +16,12 @@ Model load_model(const char* filepath){
     GLuint totalVertices = 0;
     for(unsigned int i = 0; i<mesh->face_count; ++i){
         GLuint fv = mesh->face_vertices[i];
-        if(fv==3)totalVertices+=3;
-        else if(fv==4)totalVertices+=6;
+        totalVertices+=(fv==3)?3:6;
     }
 
     m.vertexCount = totalVertices;
 
-    float* data = (float*)malloc(totalVertices*6*sizeof(float));
+    float* data = (float*)malloc(totalVertices*8*sizeof(float));
 
     GLuint dataIndex = 0;
     GLuint indexOffset = 0;
@@ -52,6 +51,15 @@ Model load_model(const char* filepath){
                     data[dataIndex++] = 1.0f; 
                     data[dataIndex++] = 0.0f;
                 }
+
+                if (mesh->texcoord_count > 0){
+                    data[dataIndex++] = mesh->texcoords[2*idx.t+0];
+                    data[dataIndex++] = mesh->texcoords[2*idx.t+1];
+                }
+                else{
+                    data[dataIndex++] = 0.0f;
+                    data[dataIndex++] = 0.0f;
+                }
             }
         }
 
@@ -63,13 +71,16 @@ Model load_model(const char* filepath){
 
     glBindVertexArray(m.VAO);
     glBindBuffer(GL_ARRAY_BUFFER, m.VBO);
-    glBufferData(GL_ARRAY_BUFFER, totalVertices*6*sizeof(float), data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, totalVertices*8*sizeof(float), data, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -80,3 +91,4 @@ Model load_model(const char* filepath){
     printf("Loaded Model: %s (%d vertices)\n", filepath, totalVertices);
     return m;
 }
+
